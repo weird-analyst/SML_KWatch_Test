@@ -413,11 +413,11 @@
       <div class="logo-section">
         <div>
           <h1>SML Functionality Azure PoC</h1>
-          <p class="subtitle">Supports Azure Functions, Manual Tests & Cosmos DB</p>
+          <p class="subtitle" id="viewModeSubtitle">Supports Azure Functions, Manual Tests & Cosmos DB</p>
         </div>
       </div>
       <div class="header-actions">
-        <button class="btn-success" onclick="addTestItem()">Add Test Item</button>
+        <button class="btn-success" onclick="addTestItem()" id="addBtn">Add Test Item</button>
         <button class="btn-primary" onclick="loadItems()">Refresh</button>
       </div>
     </div>
@@ -457,14 +457,45 @@
   <script>
     let currentPage = 1;
     let totalPages = 1;
+    let viewMode = 'test'; // 'test' or 'kwatch'
     const API_BASE = window.location.origin;
+
+    // Keyboard shortcut: Ctrl+K to toggle view mode
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'k') {
+        e.preventDefault();
+        toggleViewMode();
+      }
+    });
+
+    function toggleViewMode() {
+      viewMode = viewMode === 'test' ? 'kwatch' : 'test';
+      currentPage = 1;
+      
+      // Update UI elements
+      const subtitle = document.getElementById('viewModeSubtitle');
+      const addBtn = document.getElementById('addBtn');
+      
+      if (viewMode === 'kwatch') {
+        subtitle.textContent = '🔍 KWatch Social Media Data View (Ctrl+K to switch)';
+        subtitle.style.color = '#3b82f6';
+        addBtn.style.display = 'none';
+      } else {
+        subtitle.textContent = 'Supports Azure Functions, Manual Tests & Cosmos DB';
+        subtitle.style.color = '';
+        addBtn.style.display = '';
+      }
+      
+      loadItems(1);
+    }
 
     async function loadItems(page = currentPage) {
       try {
         document.getElementById('error-container').innerHTML = '';
         document.getElementById('items-container').innerHTML = '<div class="loading">Loading data...</div>';
 
-        const response = await fetch(`${API_BASE}/api/items?page=${page}&limit=10`);
+        const endpoint = viewMode === 'kwatch' ? '/api/kwatch' : '/api/items';
+        const response = await fetch(`${API_BASE}${endpoint}?page=${page}&limit=10`);
         
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         
@@ -473,7 +504,12 @@
         currentPage = data.pagination.page;
         totalPages = data.pagination.totalPages;
         
-        renderItems(data.items);
+        if (viewMode === 'kwatch') {
+          renderKWatchItems(data.items, data.queueStatus);
+        } else {
+          renderItems(data.items);
+        }
+        
         updateStats(data.pagination);
         updatePagination();
         
@@ -507,6 +543,75 @@
             <span>${new Date(item.timestamp).toLocaleDateString()}</span>
             <span>•</span>
             <span>${new Date(item.timestamp).toLocaleTimeString()}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderKWatchItems(items, queueStatus) {
+      const container = document.getElementById('items-container');
+      
+      if (items.length === 0) {
+        const queueInfo = queueStatus ? 
+          `<p style="margin-top: 12px; color: #64748b;">Queue: ${queueStatus.pending} pending, ${queueStatus.processing ? 'Processing...' : 'Idle'}</p>` : '';
+        
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-title">No KWatch Data Found</div>
+            <div class="empty-state-text">Waiting for webhook notifications from KWatch.io</div>
+            ${queueInfo}
+          </div>
+        `;
+        return;
+      }
+
+      const platformEmoji = {
+        'reddit': '🔴',
+        'twitter': '🐦',
+        'linkedin': '💼',
+        'hacker_news': '🟧',
+        'youtube': '📺',
+        'facebook': '📘',
+        'quora': '🅱️'
+      };
+
+      const sentimentColor = {
+        'positive': '#10b981',
+        'negative': '#ef4444',
+        'neutral': '#64748b'
+      };
+
+      const queueInfo = queueStatus ? 
+        `<div style="background: #1e293b; padding: 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid #334155;">
+          <strong>Queue Status:</strong> ${queueStatus.pending} pending | ${queueStatus.processing ? '⚙️ Processing...' : '✓ Idle'}
+        </div>` : '';
+
+      container.innerHTML = queueInfo + items.map(item => `
+        <div class="item-card">
+          <div class="item-header">
+            <span class="item-id">${item.id.substring(0, 12)}...</span>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span class="item-source" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);">
+                ${platformEmoji[item.platform] || '📱'} ${item.platform}
+              </span>
+            </div>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <div style="color: #94a3b8; font-size: 12px; margin-bottom: 8px;">
+              <strong>Query:</strong> ${item.query}
+            </div>
+            <div style="color: #94a3b8; font-size: 12px; margin-bottom: 8px;">
+              <strong>Author:</strong> ${item.author} | 
+              <strong>Sentiment:</strong> <span style="color: ${sentimentColor[item.sentiment]}">●</span> ${item.sentiment}
+            </div>
+          </div>
+          <div class="item-content">${item.content.length > 200 ? item.content.substring(0, 200) + '...' : item.content}</div>
+          <div class="item-footer">
+            <span>📅 ${item.datetime}</span>
+            <span>•</span>
+            <span><a href="${item.link}" target="_blank" style="color: #3b82f6; text-decoration: none;">View Source →</a></span>
+            <span>•</span>
+            <span>Received: ${new Date(item.receivedAt).toLocaleString()}</span>
           </div>
         </div>
       `).join('');
