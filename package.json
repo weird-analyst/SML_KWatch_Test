@@ -1,0 +1,30 @@
+{
+  "name": "sml-poc-backend",
+  "version": "1.0.0",
+  "description": "Azure PoC Backend API for Social Media Listening",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "azure",
+    "cosmos-db",
+    "express"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@azure/cosmos": "^4.9.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "type": "commonjs"
+}

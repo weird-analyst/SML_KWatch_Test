@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Social Media Listening Dashboard</title>
+  <style>
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+      background: #0f172a;
+      min-height: 100vh;
+      padding: 0;
+      color: #e2e8f0;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      border-bottom: 1px solid #334155;
+      padding: 24px 0;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    h1 {
+      color: #f1f5f9;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      font-size: 14px;
+      margin-top: 4px;
+      font-weight: 400;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 32px auto;
+      padding: 0 32px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: inherit;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #334155;
+      border-color: #475569;
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-success:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      padding: 24px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(180deg, #3b82f6 0%, #8b5cf6 100%);
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(59, 130, 246, 0.1);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #f1f5f9;
+      line-height: 1;
+    }
+
+    .stat-subtext {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 8px;
+    }
+
+    .items-container {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .item-card {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      padding: 24px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .item-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+      transition: width 0.3s;
+    }
+
+    .item-card:hover {
+      transform: translateX(4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      border-color: #475569;
+    }
+
+    .item-card:hover::before {
+      width: 6px;
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .item-id {
+      font-size: 11px;
+      color: #64748b;
+      font-family: 'Courier New', monospace;
+      background: rgba(100, 116, 139, 0.1);
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .item-source {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .source-cron {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+    }
+
+    .source-manual {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: white;
+    }
+
+    .item-content {
+      color: #cbd5e1;
+      margin-bottom: 16px;
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    .item-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .pagination {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      padding: 24px 0;
+      background: #1e293b;
+      border-radius: 12px;
+      border: 1px solid #334155;
+    }
+
+    .page-info {
+      color: #94a3b8;
+      font-size: 14px;
+      font-weight: 600;
+      min-width: 120px;
+      text-align: center;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 80px 20px;
+      color: #64748b;
+      font-size: 16px;
+    }
+
+    .loading::before {
+      content: '⟳';
+      display: block;
+      font-size: 48px;
+      margin-bottom: 16px;
+      animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .error {
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      border: 1px solid #b91c1c;
+      color: #fef2f2;
+      padding: 20px 24px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .error::before {
+      content: '⚠';
+      font-size: 24px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      border-radius: 12px;
+      border: 2px dashed #334155;
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-state-title {
+      font-size: 20px;
+      color: #e2e8f0;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .empty-state-text {
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 16px;
+        margin: 16px auto;
+      }
+
+      .header-content {
+        padding: 0 16px;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        width: 100%;
+      }
+
+      button {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <div class="logo-section">
+        <div>
+          <h1>SML Functionality Azure PoC</h1>
+          <p class="subtitle">Supports Azure Functions, Manual Tests & Cosmos DB</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-success" onclick="addTestItem()">Add Test Item</button>
+        <button class="btn-primary" onclick="loadItems()">Refresh</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">Total Items</div>
+        <div class="stat-value" id="totalItems">-</div>
+        <div class="stat-subtext">Across all sources</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Current Page</div>
+        <div class="stat-value" id="currentPage">-</div>
+        <div class="stat-subtext">Viewing page data</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Last Updated</div>
+        <div class="stat-value" id="lastUpdated" style="font-size: 18px;">-</div>
+        <div class="stat-subtext">Auto-refresh enabled</div>
+      </div>
+    </div>
+
+    <div id="error-container"></div>
+    <div id="items-container" class="items-container">
+      <div class="loading">Loading data...</div>
+    </div>
+
+    <div class="pagination">
+      <button class="btn-secondary" onclick="previousPage()" id="prevBtn">Previous</button>
+      <span class="page-info" id="pageInfo">Page 1 of 1</span>
+      <button class="btn-secondary" onclick="nextPage()" id="nextBtn">Next</button>
+    </div>
+  </div>
+
+  <script>
+    let currentPage = 1;
+    let totalPages = 1;
+    const API_BASE = window.location.origin;
+
+    async function loadItems(page = currentPage) {
+      try {
+        document.getElementById('error-container').innerHTML = '';
+        document.getElementById('items-container').innerHTML = '<div class="loading">Loading data...</div>';
+
+        const response = await fetch(`${API_BASE}/api/items?page=${page}&limit=10`);
+        
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        const data = await response.json();
+        
+        currentPage = data.pagination.page;
+        totalPages = data.pagination.totalPages;
+        
+        renderItems(data.items);
+        updateStats(data.pagination);
+        updatePagination();
+        
+        document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+      } catch (error) {
+        showError(`Failed to load data: ${error.message}`);
+      }
+    }
+
+    function renderItems(items) {
+      const container = document.getElementById('items-container');
+      
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-title">No Items Found</div>
+            <div class="empty-state-text">Add some test data or wait for the cron job to collect new items.</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = items.map(item => `
+        <div class="item-card">
+          <div class="item-header">
+            <span class="item-id">${item.id}</span>
+            <span class="item-source source-${item.source}">${item.source}</span>
+          </div>
+          <div class="item-content">${item.content}</div>
+          <div class="item-footer">
+            <span>${new Date(item.timestamp).toLocaleDateString()}</span>
+            <span>•</span>
+            <span>${new Date(item.timestamp).toLocaleTimeString()}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateStats(pagination) {
+      document.getElementById('totalItems').textContent = pagination.totalItems;
+      document.getElementById('currentPage').textContent = pagination.page;
+      document.getElementById('pageInfo').textContent = `Page ${pagination.page} of ${pagination.totalPages}`;
+    }
+
+    function updatePagination() {
+      document.getElementById('prevBtn').disabled = currentPage === 1;
+      document.getElementById('nextBtn').disabled = currentPage === totalPages;
+    }
+
+    function previousPage() {
+      if (currentPage > 1) loadItems(currentPage - 1);
+    }
+
+    function nextPage() {
+      if (currentPage < totalPages) loadItems(currentPage + 1);
+    }
+
+    async function addTestItem() {
+      try {
+        const response = await fetch(`${API_BASE}/api/items`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            category: 'test',
+            content: `KWatch test item created at ${new Date().toLocaleString()}`
+          })
+        });
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        await loadItems(1); // Reload first page
+        alert('Test item added successfully!');
+      } catch (error) {
+        showError(`Failed to add item: ${error.message}`);
+      }
+    }
+
+    function showError(message) {
+      document.getElementById('error-container').innerHTML = `<div class="error">${message}</div>`;
+      document.getElementById('items-container').innerHTML = '';
+    }
+
+    // Auto-refresh every 30 seconds
+    setInterval(() => loadItems(), 30000);
+
+    // Initial load
+    loadItems();
+  </script>
+</body>
+</html>
