@@ -441,7 +441,7 @@ const _internals = {
   mergeSpans,
 };
 
-export {
+module.exports = {
   parseRule,
   evaluateRule,
   classifyBrandRules,
