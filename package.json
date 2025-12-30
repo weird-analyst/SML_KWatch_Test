@@ -1,7 +1,7 @@
 {
-  "name": "sml-poc-backend",
+  "name": "sml-backend",
   "version": "1.0.0",
-  "description": "Azure PoC Backend API for Social Media Listening",
+  "description": "Backend for Social Media Listening",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
