@@ -413,11 +413,11 @@
       <div class="logo-section">
         <div>
           <h1>SML Functionality Azure PoC</h1>
-          <p class="subtitle" id="viewModeSubtitle">Supports Azure Functions, Manual Tests & Cosmos DB</p>
+          <p class="subtitle" id="viewModeSubtitle">KWatch Raw Data View (Ctrl+K to toggle)</p>
         </div>
       </div>
       <div class="header-actions">
-        <button class="btn-success" onclick="addTestItem()" id="addBtn">Add Test Item</button>
+        <button class="btn-success" onclick="addTestItem()" id="addBtn" style="display: none;">Add Test Item</button>
         <button class="btn-primary" onclick="loadItems()">Refresh</button>
       </div>
     </div>
@@ -457,7 +457,7 @@
   <script>
     let currentPage = 1;
     let totalPages = 1;
-    let viewMode = 'kwatch'; // 'test' or 'kwatch'
+    let viewMode = 'kwatch'; // 'kwatch' or 'kwatch_processed'
     const API_BASE = window.location.origin;
 
     // Keyboard shortcut: Ctrl+K to toggle view mode
@@ -469,22 +469,23 @@
     });
 
     function toggleViewMode() {
-      viewMode = viewMode === 'test' ? 'kwatch' : 'test';
+      viewMode = viewMode === 'kwatch' ? 'kwatch_processed' : 'kwatch';
       currentPage = 1;
       
       // Update UI elements
       const subtitle = document.getElementById('viewModeSubtitle');
       const addBtn = document.getElementById('addBtn');
       
-      if (viewMode === 'kwatch') {
-        subtitle.textContent = 'KWatch Social Media Data View';
-        subtitle.style.color = '#3b82f6';
-        addBtn.style.display = 'none';
+      if (viewMode === 'kwatch_processed') {
+        subtitle.textContent = 'KWatch Processed (Classified) Data View';
+        subtitle.style.color = '#10b981';
       } else {
-        subtitle.textContent = 'Supports Azure Functions, Manual Tests & Cosmos DB';
-        subtitle.style.color = '';
-        addBtn.style.display = '';
+        subtitle.textContent = 'KWatch Raw Data View';
+        subtitle.style.color = '#3b82f6';
       }
+      
+      // Hide add button in both modes (kwatch data comes from webhooks)
+      addBtn.style.display = 'none';
       
       loadItems(1);
     }
@@ -494,7 +495,7 @@
         document.getElementById('error-container').innerHTML = '';
         document.getElementById('items-container').innerHTML = '<div class="loading">Loading data...</div>';
 
-        const endpoint = viewMode === 'kwatch' ? '/api/kwatch' : '/api/items';
+        const endpoint = viewMode === 'kwatch_processed' ? '/api/kwatch/processed' : '/api/kwatch';
         const response = await fetch(`${API_BASE}${endpoint}?page=${page}&limit=10`);
         
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -504,10 +505,10 @@
         currentPage = data.pagination.page;
         totalPages = data.pagination.totalPages;
         
-        if (viewMode === 'kwatch') {
-          renderKWatchItems(data.items, data.queueStatus);
+        if (viewMode === 'kwatch_processed') {
+          renderProcessedItems(data.items, data.queueStatus);
         } else {
-          renderItems(data.items);
+          renderKWatchItems(data.items, data.queueStatus);
         }
         
         updateStats(data.pagination);
@@ -612,6 +613,88 @@
             <span><a href="${item.link}" target="_blank" style="color: #3b82f6; text-decoration: none;">View Source →</a></span>
             <span>•</span>
             <span>Received: ${new Date(item.receivedAt).toLocaleString()}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderProcessedItems(items, queueStatus) {
+      const container = document.getElementById('items-container');
+      
+      if (items.length === 0) {
+        const queueInfo = queueStatus ? 
+          `<p style="margin-top: 12px; color: #64748b;">Queue: ${queueStatus.pending} pending, ${queueStatus.processing ? 'Processing...' : 'Idle'}</p>` : '';
+        
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-title">No Processed Data Found</div>
+            <div class="empty-state-text">Items that match brand queries will appear here after classification</div>
+            ${queueInfo}
+          </div>
+        `;
+        return;
+      }
+
+      const platformEmoji = {
+        'reddit': '🔴',
+        'twitter': '🐦',
+        'linkedin': '💼',
+        'hacker_news': '🟧',
+        'youtube': '📺',
+        'facebook': '📘',
+        'quora': '🅱️'
+      };
+
+      const sentimentColor = {
+        'positive': '#10b981',
+        'negative': '#ef4444',
+        'neutral': '#64748b'
+      };
+
+      const queueInfo = queueStatus ? 
+        `<div style="background: #1e293b; padding: 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid #334155;">
+          <strong>Queue Status:</strong> ${queueStatus.pending} pending | ${queueStatus.processing ? '⚙️ Processing...' : '✓ Idle'}
+        </div>` : '';
+
+      container.innerHTML = queueInfo + items.map(item => `
+        <div class="item-card" style="border-left: 4px solid #10b981;">
+          <div class="item-header">
+            <span class="item-id">${item.id.substring(0, 12)}...</span>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span class="item-source" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                ${platformEmoji[item.platform] || '📱'} ${item.platform}
+              </span>
+            </div>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+              <div style="color: #10b981; font-size: 13px; font-weight: 600; margin-bottom: 4px;">
+                🏷️ Classification
+              </div>
+              <div style="color: #e2e8f0; font-size: 14px;">
+                <strong>Topic:</strong> ${item.classification?.topic || 'N/A'} &nbsp;|&nbsp;
+                <strong>Subtopic:</strong> ${item.classification?.subtopic || 'N/A'}
+              </div>
+              <div style="color: #94a3b8; font-size: 12px; margin-top: 4px;">
+                <strong>Query:</strong> ${item.classification?.query || 'N/A'}
+              </div>
+            </div>
+            <div style="color: #94a3b8; font-size: 12px; margin-bottom: 8px;">
+              <strong>KWatch Query:</strong> ${item.query}
+            </div>
+            <div style="color: #94a3b8; font-size: 12px; margin-bottom: 8px;">
+              <strong>Author:</strong> ${item.author} | 
+              <strong>Sentiment:</strong> <span style="color: ${sentimentColor[item.sentiment]}">●</span> ${item.sentiment}
+            </div>
+          </div>
+          ${item.title ? `<div style="color: #f1f5f9; font-weight: 600; margin-bottom: 8px;">${item.title}</div>` : ''}
+          <div class="item-content">${item.content.length > 200 ? item.content.substring(0, 200) + '...' : item.content}</div>
+          <div class="item-footer">
+            <span>📅 ${item.datetime}</span>
+            <span>•</span>
+            <span><a href="${item.link}" target="_blank" style="color: #3b82f6; text-decoration: none;">View Source →</a></span>
+            <span>•</span>
+            <span>Classified: ${new Date(item.classifiedAt).toLocaleString()}</span>
           </div>
         </div>
       `).join('');

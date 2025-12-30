@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { kwatchContainer } = require('../config/database');
+const { kwatchContainer, kwatchProcessedContainer } = require('../config/database');
 const { getQueueStatus } = require('../services/kwatchQueue');
 
-// GET /api/kwatch - KWatch Data Retrieval Endpoint
+// GET /api/kwatch - KWatch Raw Data Retrieval Endpoint
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -38,6 +38,44 @@ router.get('/', async (req, res) => {
   } catch (error) {
     console.error('Error fetching KWatch items:', error);
     res.status(500).json({ error: 'Failed to fetch KWatch items' });
+  }
+});
+
+// GET /api/kwatch/processed - KWatch Processed (Classified) Data Retrieval Endpoint
+router.get('/processed', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    const querySpec = {
+      query: 'SELECT * FROM c ORDER BY c.classifiedAt DESC OFFSET @offset LIMIT @limit',
+      parameters: [
+        { name: '@offset', value: offset },
+        { name: '@limit', value: limit }
+      ]
+    };
+
+    const { resources: items } = await kwatchProcessedContainer.items.query(querySpec).fetchAll();
+    
+    // Get total count
+    const countQuery = { query: 'SELECT VALUE COUNT(1) FROM c' };
+    const { resources: countResult } = await kwatchProcessedContainer.items.query(countQuery).fetchAll();
+    const totalItems = countResult[0] || 0;
+
+    res.json({
+      items,
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit)
+      },
+      queueStatus: getQueueStatus()
+    });
+  } catch (error) {
+    console.error('Error fetching KWatch processed items:', error);
+    res.status(500).json({ error: 'Failed to fetch KWatch processed items' });
   }
 });
 
