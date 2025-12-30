@@ -39,15 +39,9 @@ router.post('/kwatch', async (req, res) => {
     console.log(`KWatch notification queued: ${payload.platform} - ${uniqueId}`);
     console.log(`Queue size: ${queuePosition}`);
 
-    // res.status(202).json({ 
-    //   message: 'Notification received and queued',
-    //   id: uniqueId,
-    //   queuePosition: kwatchQueue.length
-    // });
     res.status(200).json({ 
       message: 'Notification received',
     });
-
   } catch (error) {
     console.error('KWatch webhook error:', error);
     res.status(500).json({ error: 'Failed to process webhook' });

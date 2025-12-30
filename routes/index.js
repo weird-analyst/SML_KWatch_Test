@@ -3,7 +3,7 @@ const router = express.Router();
 
 const kwatchRoutes = require('./kwatch');
 const webhookRoutes = require('./webhook');
-const itemsRoutes = require('./items');
+const itemsRoutes = require('./items'); // Testing routes
 const healthRoutes = require('./health');
 
 // Mount routes

@@ -6,13 +6,13 @@ const client = new CosmosClient({
   key: process.env.COSMOS_KEY
 });
 
-// Main database and container
+// Testing database and container
 const database = client.database(process.env.COSMOS_DATABASE);
 const container = database.container(process.env.COSMOS_CONTAINER);
 
-// KWatch database and container
+// KWatch database and container (Final database)
 const kwatchDatabase = client.database(process.env.COSMOS_KWATCH_DATABASE);
-const kwatchContainer = kwatchDatabase.container(process.env.COSMOS_KWATCH_CONTAINER);
+const kwatchContainer = kwatchDatabase.container(process.env.COSMOS_KWATCH_CONTAINER); // Container for KWatch Raw Data
 
 module.exports = {
   client,
