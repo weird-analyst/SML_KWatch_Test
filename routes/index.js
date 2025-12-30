@@ -1,0 +1,15 @@
+const express = require('express');
+const router = express.Router();
+
+const kwatchRoutes = require('./kwatch');
+const webhookRoutes = require('./webhook');
+const itemsRoutes = require('./items');
+const healthRoutes = require('./health');
+
+// Mount routes
+router.use('/webhook', webhookRoutes);
+router.use('/kwatch', kwatchRoutes);
+router.use('/items', itemsRoutes);
+router.use('/health', healthRoutes);
+
+module.exports = router;

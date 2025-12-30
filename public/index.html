@@ -457,7 +457,7 @@
   <script>
     let currentPage = 1;
     let totalPages = 1;
-    let viewMode = 'test'; // 'test' or 'kwatch'
+    let viewMode = 'kwatch'; // 'test' or 'kwatch'
     const API_BASE = window.location.origin;
 
     // Keyboard shortcut: Ctrl+K to toggle view mode
@@ -477,7 +477,7 @@
       const addBtn = document.getElementById('addBtn');
       
       if (viewMode === 'kwatch') {
-        subtitle.textContent = '🔍 KWatch Social Media Data View (Ctrl+K to switch)';
+        subtitle.textContent = 'KWatch Social Media Data View';
         subtitle.style.color = '#3b82f6';
         addBtn.style.display = 'none';
       } else {
@@ -661,8 +661,8 @@
       document.getElementById('items-container').innerHTML = '';
     }
 
-    // Auto-refresh every 30 seconds
-    setInterval(() => loadItems(), 30000);
+    // Auto-refresh every 120 seconds
+    setInterval(() => loadItems(), 120000);
 
     // Initial load
     loadItems();
