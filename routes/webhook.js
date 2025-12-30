@@ -27,6 +27,7 @@ router.post('/kwatch', async (req, res) => {
       datetime: payload.datetime,
       link: payload.link,
       author: payload.author,
+      title: payload.title || '',
       content: payload.content,
       sentiment: payload.sentiment || 'neutral',
       receivedAt: new Date().toISOString(),
